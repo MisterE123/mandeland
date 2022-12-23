@@ -9,12 +9,9 @@ local coserp = luamap.coserp
 local abs = math.abs
 local lines = {}
 local old_logic = luamap.logic
+local old_postcalc = luamap.postcalc
 local old_precalc = luamap.precalc
 
-
-local c_air = minetest.get_content_id("air")
-local c_stone = minetest.get_content_id("default:stone")
-local c_water = minetest.get_content_id("default:water_source")
 
 luamap.register_noise("terrain",{
     type = "2d",
@@ -54,10 +51,25 @@ local offsetx = -1415/2000
 local offsetz = -706/2000
 local steps = 150
 
+-- content ids
+
+local c_air
+local c_stone 
+local c_water 
+
+function luamap.precalc(data, area, vm, minp, maxp, seed)
+    old_precalc(data, area, vm, minp, maxp, seed)
+    c_air = minetest.get_content_id("air")
+    c_stone = minetest.get_content_id("mapgen_stone")
+    c_water = minetest.get_content_id("mapgen_water_source")
+end
+
 --mapgen logic
 
 function luamap.logic(noisevals,x,y,z,seed)
-    local content = c_air -- returns air if no other luamap mapgens exist
+
+
+    local content = old_logic(noisevals,x,y,z,seed) -- returns air if no other luamap mapgens exist
     local mandelfactor = remap(mandel( (x/scale)+offsetx , (z/scale)+offsetz ,steps),0,steps,0,-1)*150
     local height = mandelfactor  + 145
     
@@ -77,7 +89,7 @@ end
 
 
 -- generate biomes with biomegen
-function luamap.precalc(data, area, vm, minp, maxp, seed)
-    --old_precalc(data, area, vm, minp, maxp, seed)
+function luamap.postcalc(data, area, vm, minp, maxp, seed)
+    old_postcalc(data, area, vm, minp, maxp, seed)
     biomegen.generate_all(data, area, vm, minp, maxp, seed)
 end
